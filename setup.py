@@ -18,8 +18,5 @@ setup(
         "pinbot",
         "pinbot.core",
     ],
-    entry_points={
-        "console_scripts": ["pinbot=pinbot.core.cli:main"],
-    },
     include_package_data=True,
 )

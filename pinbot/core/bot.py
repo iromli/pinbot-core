@@ -10,7 +10,7 @@ import irc3
 from . import config
 
 
-def main():
+def create():
     settings = config.resolve()
     bot = irc3.IrcBot(**settings)
-    bot.run()
+    return bot
