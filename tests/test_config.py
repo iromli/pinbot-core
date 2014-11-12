@@ -63,3 +63,13 @@ def test_resolve_with_autojoins(tmpdir):
     os.environ["PINBOT_CONFIG"] = six.text_type(file_)
     settings = resolve()
     assert settings["autojoins"] == ["#foo", "#bar"]
+
+
+def test_resolve_masks():
+    from pinbot.core.config import _resolve_masks
+
+    settings = _resolve_masks({
+        "masks_random": "johndoe!*@*,janedoe!*@*",
+    })
+    actual = {"johndoe!*@*": "random", "janedoe!*@*": "random"}
+    assert settings["irc3.plugins.command.masks"] == actual
