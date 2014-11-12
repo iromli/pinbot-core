@@ -4,72 +4,46 @@ from __future__ import (
     print_function,
     unicode_literals,
 )
-
 import os
 
 import pytest
 import six
 
 
-def test_from_file(tmpdir):
-    from pinbot.core.config import _from_file
-
-    file_ = tmpdir.mkdir("pinbot_core").join("config.py")
-    file_.write('PINBOT_HOST = "example.com"')
-
-    settings = _from_file(six.text_type(file_))
-    assert "PINBOT_HOST" in settings
-
-
-def test_from_environ():
-    from pinbot.core.config import _from_environ
-
-    os.environ["PINBOT_HOST"] = "example.com"
-    settings = _from_environ()
-    assert "PINBOT_HOST" in settings
-
-
-@pytest.mark.parametrize("values, size", [
-    ("#chan1,#chan2", 2),
-    ("#chan1, #chan2,", 2),
-    (" #chan1 , #chan2 ,", 2),
-    (" #chan1 , #chan2 , ", 2),
+@pytest.mark.parametrize("envvar,val,resolved", [
+    ("PINBOT_HOST", "localhost", True),
+    ("HOST", "localhost", False),
 ])
-def test_resolve_comma_values(values, size):
-    from pinbot.core.config import _resolve_comma_values
+def test_get_envvars(envvar, val, resolved):
+    from pinbot.core.config import get_envvars
 
-    resolved = _resolve_comma_values(values)
-    assert len(resolved) == size
+    os.environ[envvar] = val
+    assert (envvar in get_envvars()) == resolved
 
 
 def test_resolve(tmpdir):
     from pinbot.core.config import resolve
 
-    file_ = tmpdir.mkdir("pinbot_core").join("config.py")
-    file_.write('PINBOT_HOST = "example.com"')
+    file_ = tmpdir.mkdir("pinbot_test").join("pinbot.ini")
+    file_.write("""
+    [bot]
+    host = localhost
+    port = 6667
+    ssl = false
+    async = true
+    includes =
+        custom.plugin
 
-    os.environ["PINBOT_CONFIG"] = six.text_type(file_)
+    [custom.plugin]
+    name = ${ENV:PLUGIN_NAME}
+    """)
 
-    settings = resolve()
+    os.environ["PINBOT_PLUGIN_NAME"] = "custom"
+    settings = resolve(six.text_type(file_))
+
     assert "host" in settings
-
-
-def test_resolve_with_autojoins(tmpdir):
-    from pinbot.core.config import resolve
-
-    file_ = tmpdir.mkdir("pinbot_core").join("config.py")
-    file_.write('PINBOT_AUTOJOINS = "#foo, #bar"')
-
-    os.environ["PINBOT_CONFIG"] = six.text_type(file_)
-    settings = resolve()
-    assert settings["autojoins"] == ["#foo", "#bar"]
-
-
-def test_resolve_masks():
-    from pinbot.core.config import _resolve_masks
-
-    settings = _resolve_masks({
-        "masks_random": "johndoe!*@*,janedoe!*@*",
-    })
-    actual = {"johndoe!*@*": "random", "janedoe!*@*": "random"}
-    assert settings["irc3.plugins.command.masks"] == actual
+    assert settings["port"] == 6667
+    assert settings["ssl"] is False
+    assert settings["async"] is True
+    assert settings["includes"] == ["custom.plugin"]
+    assert settings["custom.plugin"]["name"] == "custom"

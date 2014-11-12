@@ -8,6 +8,7 @@ from __future__ import (
 
 def test_dataset():
     import os
+    import sys
     from pinbot.core.bot import create
     from pinbot.core.database import Dataset
 
@@ -15,6 +16,7 @@ def test_dataset():
     os.environ["PINBOT_INCLUDES"] = "pinbot.core.database"
     os.environ["PINBOT_DATABASE_URL"] = "sqlite://"
 
+    sys.argv = ["pinbot", "bot.ini"]
     bot = create()
     dataset = Dataset(bot)
     assert dataset.db is not None

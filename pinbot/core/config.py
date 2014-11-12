@@ -6,73 +6,42 @@ from __future__ import (
 )
 
 import os
-from itertools import takewhile
 
-import six
+import irc3.utils
+import configparser
 
 
-def _from_file(path):
-    settings = {}
-
-    with open(path) as f:
-        exec(f.read(), {}, settings)
-
+def get_envvars():
     return {
-        k: v for k, v in six.iteritems(settings)
-        if k.isupper() and k.startswith("PINBOT_")
-    }
-
-
-def _from_environ():
-    return {
-        k: v for k, v in six.iteritems(os.environ)
+        k: v for k, v in os.environ.items()
         if k.startswith("PINBOT_")
     }
 
 
-def _resolve_comma_values(values):
-    resolved = takewhile(
-        lambda v: v,
-        [item.strip() for item in values.split(",")],
-        )
-    return list(resolved)
+def resolve(file_):
+    parser = configparser.SafeConfigParser(
+        interpolation=configparser.ExtendedInterpolation())
+    parser.read(file_)
 
+    parser.add_section("ENV")
+    for k, v in get_envvars().items():
+        parser.set("ENV", k.replace("PINBOT_", ""), v)
 
-def _resolve_masks(settings=None):
-    from collections import defaultdict
-    masks = defaultdict(dict)
-
-    settings = settings or {}
-    settings["irc3.plugins.command"] = {
-        "guard": "irc3.plugins.command.mask_based_policy",
-    }
-
-    for k, v in six.iteritems(settings):
-        if not k.startswith("masks_"):
-            continue
-
-        for mask in _resolve_comma_values(v):
-            masks["irc3.plugins.command.masks"][mask] = k.replace("masks_", "")
-
-    settings.update(masks)
-    return settings
-
-
-def resolve():
     settings = {}
-    conf = os.environ.get("PINBOT_CONFIG")
+    for s in parser.sections():
+        items = {}
+        for k, v in parser.items(s):
+            if "\n" in v:
+                v = irc3.utils.as_list(v)
+            elif v.isdigit():
+                v = int(v)
+            elif v == "true":
+                v = True
+            elif v == "false":
+                v = False
+            items[k] = v
+        settings[s] = items
 
-    if conf:
-        settings.update(_from_file(conf))
-
-    settings.update(_from_environ())
-
-    settings = {
-        k.lower().replace("pinbot_", ""): v for k, v in six.iteritems(settings)
-    }
-
-    for csv in ("autojoins", "includes"):
-        if csv in settings:
-            settings[csv] = _resolve_comma_values(settings[csv])
-    settings = _resolve_masks(settings)
+    settings.pop("ENV", None)
+    settings.update(settings.pop("bot", {}))
     return settings

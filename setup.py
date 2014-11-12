@@ -14,6 +14,7 @@ setup(
         "irc3",
         "six",
         "dataset",
+        "configparser",
     ],
     packages=[
         "pinbot",
