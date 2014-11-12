@@ -13,6 +13,7 @@ setup(
     install_requires=[
         "irc3",
         "six",
+        "dataset",
     ],
     packages=[
         "pinbot",
