@@ -19,5 +19,5 @@ class Dataset(object):
     def db(self):
         if self._db is None:
             self._db = dataset.connect(
-                self.bot.config.get("database_url", "sqlite://"))
+                self.bot.config.get("database_url", "sqlite:///pinbot.db"))
         return self._db
