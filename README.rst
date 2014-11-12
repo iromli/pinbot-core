@@ -1,7 +1,29 @@
 pinbot-core
 ===========
 
-Simple usage::
+Write your bot:
 
-    PINBOT_HOST='irc.freenode.net' PINBOT_PORT=6667 PINBOT_AUTOJOINS='#pinbot' PINBOT_NICK='__pinbot__' \
-        python -c 'import pinbot.core.bot; pinbot.core.bot.create().run()'
+.. sourcecode:: python
+
+    # bot.py
+    import pinbot.core.bot
+
+    bot = pinbot.core.bot.create()
+    bot.run()
+
+Configure your bot:
+
+.. sourcecode:: ini
+
+    # config.ini
+    [bot]
+    host = irc.freenode.net
+    port = 6667
+    autojoins =
+        pinbot
+
+Run your bot:
+
+.. sourcecode:: sh
+
+    python bot.py config.ini
