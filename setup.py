@@ -15,6 +15,7 @@ setup(
         "six",
         "dataset",
         "configparser",
+        "docopt",
     ],
     packages=[
         "pinbot",
