@@ -20,6 +20,7 @@ setup(
     packages=[
         "pinbot",
         "pinbot.core",
+        "pinbot.keyword",
     ],
     include_package_data=True,
 )
